@@ -1,0 +1,17 @@
+{
+  "name": "slack-gitlab-test-bridge",
+  "version": "1.0.0",
+  "description": "Free Slack to GitLab test trigger - Zero cost deployment",
+  "main": "api/slack-events.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build needed'",
+    "start": "echo 'Serverless function'"
+  },
+  "keywords": ["slack", "gitlab", "ci/cd", "testing", "free"],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  }
+}
