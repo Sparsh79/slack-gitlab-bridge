@@ -95,6 +95,13 @@ async function sendSlackMessage(channel, message) {
 }
 
 async function triggerGitLabTests(testConfig, slackUser, slackChannel) {
+
+  console.log('Environment check:');
+  console.log('GITLAB_PROJECT_ID:', process.env.GITLAB_PROJECT_ID);
+  console.log('GITLAB_TRIGGER_TOKEN present:', !!process.env.GITLAB_TRIGGER_TOKEN);
+  console.log('GITLAB_URL:', process.env.GITLAB_URL);
+  console.log('SLACK_BOT_TOKEN present:', !!process.env.SLACK_BOT_TOKEN);
+
   const variables = {
     TRIGGERED_BY_SLACK: 'true',
     SLACK_USER: slackUser,
@@ -102,27 +109,39 @@ async function triggerGitLabTests(testConfig, slackUser, slackChannel) {
     TEST_SUITE: testConfig.testSuite,
     TEST_ENVIRONMENT: testConfig.environment
   };
-  
-  console.log('Triggering GitLab with variables:', variables);
-  
+
+  const requestBody = {
+    token: GITLAB_TRIGGER_TOKEN,
+    ref: testConfig.branch,
+    variables
+  };
+
+  console.log('=== GitLab API Request Debug ===');
+  console.log('URL:', `${GITLAB_URL}/api/v4/projects/${GITLAB_PROJECT_ID}/trigger/pipeline`);
+  console.log('Project ID:', GITLAB_PROJECT_ID);
+  console.log('Token present:', GITLAB_TRIGGER_TOKEN ? 'Yes' : 'No');
+  console.log('Token starts with glptt:', GITLAB_TRIGGER_TOKEN?.startsWith('glptt-'));
+  console.log('Request body:', JSON.stringify(requestBody, null, 2));
+  console.log('================================');
+
   const response = await fetch(
     `${GITLAB_URL}/api/v4/projects/${GITLAB_PROJECT_ID}/trigger/pipeline`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: GITLAB_TRIGGER_TOKEN,
-        ref: testConfig.branch,
-        variables
-      })
+      body: JSON.stringify(requestBody)
     }
   );
-  
+
+  console.log('Response status:', response.status);
+  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
   if (!response.ok) {
     const errorText = await response.text();
+    console.log('Full error response:', errorText);
     throw new Error(`GitLab API error: ${response.status} - ${errorText}`);
   }
-  
+
   return await response.json();
 }
 
